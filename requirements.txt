@@ -12,3 +12,5 @@ tzdata==2025.2
 matplotlib
 seaborn
 plotly
+streamlit-autorefresh
+
