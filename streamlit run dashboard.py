@@ -17,7 +17,7 @@ except OSError:
 # ✅ DB Connection
 def get_connection():
     return pymysql.connect(
-        host="127.0.0.1",
+        host="mysql",
         user="root",
         password="root",
         db="customer_db"
