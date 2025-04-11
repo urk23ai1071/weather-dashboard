@@ -9,18 +9,18 @@ import plotly.express as px
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
-# ✅ Use a valid matplotlib style (fallback to default if not available)
+# ✅ Use a valid matplotlib style
 try:
     style.use('ggplot')
 except OSError:
     style.use('default')
 
-# ✅ DB Connection using environment variables
+# ✅ DB Connection using Railway Env Variables
 def get_connection():
     return pymysql.connect(
         host=os.getenv("MYSQLHOST", "mysql"),
         user=os.getenv("MYSQLUSER", "root"),
-        password=os.getenv("MYSQLPASSWORD", "KUpMwZziZxyqWfHHbDPKHrSvwLNxqphV"),
+        password=os.getenv("MYSQLPASSWORD", ""),
         db=os.getenv("MYSQLDATABASE", "railway"),
         port=int(os.getenv("MYSQLPORT", 3306))
     )
@@ -31,7 +31,7 @@ def fetch_data():
         conn = get_connection()
         df = pd.read_sql("SELECT * FROM customer_db", conn)
         conn.close()
-        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s', errors='coerce')
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
         return df.dropna(subset=['timestamp'])
     except Exception as e:
         st.error(f"❌ Error fetching data: {e}")
@@ -53,10 +53,9 @@ if df.empty:
 city_options = df['city'].unique().tolist()
 selected_city = st.sidebar.selectbox("🏙️ Select City", city_options)
 
-# ✅ Date filter with safe fallback
+# ✅ Date filter
 min_timestamp = df['timestamp'].min().date()
 max_timestamp = df['timestamp'].max().date()
-
 if min_timestamp < max_timestamp:
     date_range = st.slider("📆 Select Date Range", 
                            min_value=min_timestamp,
@@ -65,10 +64,12 @@ if min_timestamp < max_timestamp:
     start_date, end_date = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
 else:
     start_date = end_date = pd.to_datetime(min_timestamp)
-    st.info("Only one date available. Showing data for that day.")
+    st.info("Only one date available. Showing that day.")
 
 # ✅ Filtered data
-city_df = df[(df['city'] == selected_city) & (df['timestamp'] >= start_date) & (df['timestamp'] <= end_date)]
+city_df = df[(df['city'] == selected_city) & 
+             (df['timestamp'] >= start_date) & 
+             (df['timestamp'] <= end_date)]
 
 st.header(f"📍 City Dashboard: {selected_city}")
 
@@ -97,13 +98,13 @@ if not city_df.empty:
     col2.metric("💧 Avg Humidity (%)", f"{avg_humidity:.2f}")
     col3.metric("📍 Cities Reporting", df['city'].nunique())
 
-    # ✅ Tabs for visualizations
+    # ✅ Visualizations
     tab1, tab2, tab3, tab4 = st.tabs(["📈 Line Chart", "📊 Humidity Chart", "🔥 Heatmap", "📽️ Animation"])
 
     with tab1:
         st.subheader("📈 Temperature Over Time")
         fig1, ax1 = plt.subplots()
-        city_df.sort_values(by='timestamp').plot(x='timestamp', y='temperature', ax=ax1, color='tomato')
+        city_df.sort_values('timestamp').plot(x='timestamp', y='temperature', ax=ax1, color='tomato')
         ax1.set_xlabel("Timestamp")
         ax1.set_ylabel("Temperature (°C)")
         ax1.set_title(f"🌡️ Temperature Trend in {selected_city}")
@@ -132,11 +133,9 @@ if not city_df.empty:
         fig4 = px.line(city_df.sort_values('timestamp'),
                        x='timestamp', y='temperature', color='city',
                        animation_frame=city_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S'),
-                       title="🌡️ Temperature Trend Over Time",
-                       labels={'temperature': 'Temperature (°C)'})
+                       title="🌡️ Temperature Trend Over Time")
         st.plotly_chart(fig4, use_container_width=True)
 
-    # ✅ Data Table and Export
     with st.expander("🧾 Show Data Table"):
         st.dataframe(city_df)
 
