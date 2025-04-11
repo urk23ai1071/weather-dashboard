@@ -29,7 +29,7 @@ def get_connection():
 def fetch_data():
     try:
         conn = get_connection()
-        df = pd.read_sql("SELECT * FROM weather_db", conn)
+        df = pd.read_sql("SELECT * FROM customer_db", conn)
         conn.close()
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s', errors='coerce')
         return df.dropna(subset=['timestamp'])
