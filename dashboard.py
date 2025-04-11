@@ -8,8 +8,6 @@ import seaborn as sns
 import plotly.express as px
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
-from faker import Faker
-import random
 
 # ✅ Use a valid matplotlib style
 try:
@@ -26,29 +24,6 @@ def get_connection():
         db=os.getenv("MYSQLDATABASE", "railway"),
         port=int(os.getenv("MYSQLPORT", 3306))
     )
-
-# ✅ Faker Data Generator
-def insert_fake_data(n=10):
-    fake = Faker()
-    conn = get_connection()
-    cursor = conn.cursor()
-    cities = ['Chennai', 'Delhi', 'Mumbai', 'Bangalore', 'Hyderabad', 'Kolkata', 'Pune']
-    conditions = ['Sunny', 'Cloudy', 'Rainy', 'Humid', 'Windy', 'Clear sky', 'Stormy']
-    for _ in range(n):
-        city = random.choice(cities)
-        temperature = round(random.uniform(20, 42), 1)
-        humidity = random.randint(40, 90)
-        weather = random.choice(conditions)
-        wind_speed = round(random.uniform(1, 9), 2)
-        timestamp = fake.date_time_between(start_date='-3d', end_date='now').strftime('%Y-%m-%d %H:%M:%S')
-        query = """
-            INSERT INTO customer_db (city, temperature, humidity, weather, wind_speed, timestamp)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (city, temperature, humidity, weather, wind_speed, timestamp))
-    conn.commit()
-    cursor.close()
-    conn.close()
 
 # ✅ Fetch Data
 def fetch_data():
@@ -68,12 +43,6 @@ st.title("🌦️ Real-Time Weather Monitoring Dashboard")
 
 # ✅ Auto Refresh
 st_autorefresh(interval=10 * 1000, key="datarefresh")  # every 10 seconds
-
-# ✅ Faker Data Button
-with st.expander("➕ Insert Fake Weather Data"):
-    if st.button("Generate & Insert 10 Rows"):
-        insert_fake_data(10)
-        st.success("✅ 10 Fake rows inserted. Refresh the page.")
 
 # ✅ Load and filter data
 df = fetch_data()
@@ -182,4 +151,4 @@ else:
 
 # ✅ Footer
 st.markdown("---")
-st.markdown("Made with ❤️ using **Streamlit** | Data from `customer_db` 📦")
+st.markdown("Made with ❤️ using **Streamlit** | Data from `weather_db` 📦")
