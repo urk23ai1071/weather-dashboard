@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import pymysql
+import mysql.connector
 import matplotlib.pyplot as plt
 import matplotlib.style as style
 import seaborn as sns
@@ -14,7 +15,26 @@ try:
 except OSError:
     style.use('default')
 
-# ✅ DB Connection
+# ✅ Try direct connection check using mysql.connector
+st.sidebar.header("🔌 MySQL Connection Test")
+try:
+    conn_test = mysql.connector.connect(
+        host="mysql",
+        user="user",
+        password="password",
+        database="customer_db",
+        port=3306
+    )
+    cursor = conn_test.cursor()
+    cursor.execute("SHOW TABLES")
+    tables = cursor.fetchall()
+    st.sidebar.success("✅ Connected to MySQL (mysql.connector)")
+    st.sidebar.write("Tables:", tables)
+    conn_test.close()
+except Exception as e:
+    st.sidebar.error(f"❌ Connection Error: {e}")
+
+# ✅ DB Connection using PyMySQL for Pandas
 def get_connection():
     return pymysql.connect(
         host="mysql",
@@ -56,7 +76,7 @@ min_timestamp = df['timestamp'].min().date()
 max_timestamp = df['timestamp'].max().date()
 
 if min_timestamp < max_timestamp:
-    date_range = st.slider("📆 Select Date Range", 
+    date_range = st.slider("📆 Select Date Range",
                            min_value=min_timestamp,
                            max_value=max_timestamp,
                            value=(min_timestamp, max_timestamp))
@@ -148,6 +168,6 @@ if not city_df.empty:
 else:
     st.warning("⚠️ No data available for selected city.")
 
-# ✅ FooterA
+# ✅ Footer
 st.markdown("---")
 st.markdown("Made with ❤️ using **Streamlit** | Data from `weather_db` 📦")
