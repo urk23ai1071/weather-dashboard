@@ -1,7 +1,7 @@
+import os
 import streamlit as st
 import pandas as pd
 import pymysql
-import mysql.connector
 import matplotlib.pyplot as plt
 import matplotlib.style as style
 import seaborn as sns
@@ -15,32 +15,14 @@ try:
 except OSError:
     style.use('default')
 
-# ✅ Try direct connection check using mysql.connector
-st.sidebar.header("🔌 MySQL Connection Test")
-try:
-    conn_test = mysql.connector.connect(
-        host="mysql",
-        user="user",
-        password="password",
-        database="customer_db",
-        port=3306
-    )
-    cursor = conn_test.cursor()
-    cursor.execute("SHOW TABLES")
-    tables = cursor.fetchall()
-    st.sidebar.success("✅ Connected to MySQL (mysql.connector)")
-    st.sidebar.write("Tables:", tables)
-    conn_test.close()
-except Exception as e:
-    st.sidebar.error(f"❌ Connection Error: {e}")
-
-# ✅ DB Connection using PyMySQL for Pandas
+# ✅ DB Connection using environment variables
 def get_connection():
     return pymysql.connect(
-        host="mysql",
-        user="root",
-        password="root",
-        db="customer_db"
+        host=os.getenv("MYSQLHOST", "mysql"),
+        user=os.getenv("MYSQLUSER", "root"),
+        password=os.getenv("MYSQLPASSWORD", "KUpMwZziZxyqWfHHbDPKHrSvwLNxqphV"),
+        db=os.getenv("MYSQLDATABASE", "railway"),
+        port=int(os.getenv("MYSQLPORT", 3306))
     )
 
 # ✅ Fetch Data
@@ -76,7 +58,7 @@ min_timestamp = df['timestamp'].min().date()
 max_timestamp = df['timestamp'].max().date()
 
 if min_timestamp < max_timestamp:
-    date_range = st.slider("📆 Select Date Range",
+    date_range = st.slider("📆 Select Date Range", 
                            min_value=min_timestamp,
                            max_value=max_timestamp,
                            value=(min_timestamp, max_timestamp))
